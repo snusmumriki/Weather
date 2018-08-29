@@ -33,7 +33,6 @@ configurations.all {
     }
 }
 
-
 kapt {
     generateStubs = true
     mapDiagnosticLocations = true
@@ -68,9 +67,5 @@ dependencies {
 
     //implementation 'com.trello.navi2:navi:2.0.1'
     implementation 'com.jakewharton.rxbinding2:rxbinding:2.1.1'
-    //implementation 'com.jakewharton.rxbinding2:rxbinding-appcompat-v7:2.1.1'
-
-    implementation 'com.jjoe64:graphview:4.2.2'
-    //implementation 'com.squareup.picasso:picasso:2.71828'
     implementation "org.jetbrains.anko:anko-commons:0.10.5"
 }
