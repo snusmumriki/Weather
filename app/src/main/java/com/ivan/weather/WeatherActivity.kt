@@ -22,6 +22,7 @@ class WeatherActivity : DaggerAppCompatActivity() {
         setSupportActionBar(toolbar)
         pagerAdapter = SectionsPagerAdapter(supportFragmentManager)
         container.adapter = pagerAdapter
+        //supportActionBar!!.setIcon(R.drawable.vector_drawable_flight)
 
         container.addOnPageChangeListener(TabLayout.TabLayoutOnPageChangeListener(tabs))
         tabs.addOnTabSelectedListener(TabLayout.ViewPagerOnTabSelectedListener(container))
@@ -29,7 +30,7 @@ class WeatherActivity : DaggerAppCompatActivity() {
 
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.menu_weather, menu)
+        //menuInflater.inflate(R.menu.menu_weather, menu)
         return true
     }
 

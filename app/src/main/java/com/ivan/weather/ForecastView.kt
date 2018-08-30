@@ -4,26 +4,35 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.Paint
 import android.util.AttributeSet
+import android.view.MotionEvent
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import com.ivan.weather.data.Forecast
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import kotlin.math.abs
+import kotlin.math.roundToInt
+import kotlin.math.sign
 
-data class GridParams(val minX: Int, val minY: Int, val maxY: Int, val period: Float)
+data class GridOptions(val minX: Int, val minY: Int, val maxY: Int, val period: Float)
 
-data class LineParams(val strokeWidth: Float, val pointRadius: Float,
-                      val lineColor: Int, val backgroundColor: Int)
+data class LineOptions(val strokeWidth: Float, val pointRadius: Float,
+                       val lineColor: Int, val backgroundColor: Int
+)
+
+data class WeatherPoint(val x: Float, val y: Float,
+                        val temp: Int, val time: Int,
+                        val windSpeed: Float, val text: String)
 
 class ForecastView(context: Context, attrs: AttributeSet) :
         SurfaceView(context, attrs), SurfaceHolder.Callback {
 
-    var mLineParams: LineParams = LineParams(4.0f, 8.0f, Color.BLUE, Color.GRAY)
-    var mGridParams: GridParams = GridParams(-1, -40, 40, 1.0f)
+    var lineOptions: LineOptions = LineOptions(8.0f, 8.0f, Color.BLUE, Color.GRAY)
+    var gridOptions: GridOptions = GridOptions(-1, -40, 40, 10.0f)
     var forecast: Forecast = Forecast(emptyList(), 0, 0)
-    private var currentLine = 0
-    var drawing = true
+    private var currentLine = 1
+    private var drawing = true
 
     init {
         holder.addCallback(this)
@@ -31,37 +40,42 @@ class ForecastView(context: Context, attrs: AttributeSet) :
 
     fun showForecast() {
         val canvas = holder.lockCanvas()
-        canvas.drawColor(mLineParams.backgroundColor)
+        canvas.drawColor(lineOptions.backgroundColor)
         if (forecast.lines.isNotEmpty()) {
             val forecastLine = forecast.lines[currentLine]
-            val offset = if (currentLine == 0) forecast.lineLength - forecastLine.size else 0
-            val hourStep = forecast.hourStep
-            val tempRange = mGridParams.maxY - mGridParams.minY
+            val posOffset = if (currentLine == 0)
+                forecast.lineLength - forecastLine.size else 0
+            val tempRange = gridOptions.maxY - gridOptions.minY
             val cellHeight = canvas.height.toFloat() / tempRange.toFloat()
-            val cellWidth = cellHeight * mGridParams.period
+            val cellWidth = cellHeight * gridOptions.period
 
-            for (i in 0 until forecastLine.size) {
-                val f0 = forecastLine[i]
-                val x0 = (i + offset) * cellWidth
-                val y0 = (tempRange - f0.temp) * cellHeight
+            val weatherPoints = forecastLine.mapIndexed { i, w ->
+                val pos = i + posOffset
+                WeatherPoint(pos * cellWidth,
+                        (gridOptions.maxY - w.temp) * cellHeight,
+                        w.temp.roundToInt(),
+                        pos * forecast.hourStep,
+                        w.windSpeed, w.text)
+            }
+
+            for (i in 0 until weatherPoints.size) {
+                val wp0 = weatherPoints[i]
 
                 val paint = Paint(Paint.ANTI_ALIAS_FLAG)
                 paint.style = Paint.Style.FILL_AND_STROKE
-                paint.color = mLineParams.lineColor
-                canvas.drawCircle(x0, y0, mLineParams.pointRadius, paint)
+                paint.color = lineOptions.lineColor
+                canvas.drawCircle(wp0.x, wp0.y, lineOptions.pointRadius, paint)
 
-                if (i < forecastLine.size - 1) {
-                    val f1 = forecastLine[i + 1]
-                    val x1 = (i + 1 + offset) * cellWidth
-                    val y1 = (tempRange - f1.temp) * cellHeight
-                    canvas.drawLine(x0, y0, x1, y1, paint)
+                paint.textSize = 40.0f
+                canvas.drawText("%2d°C".format(wp0.temp),
+                        wp0.x - 40.0f, wp0.y - 20.0f, paint)
+                canvas.drawText("%02d:00".format(wp0.time),
+                        wp0.x - 50.0f, canvas.height - 200.0f, paint)
+
+                if (i < weatherPoints.size - 1) {
+                    val wp1 = weatherPoints[i + 1]
+                    canvas.drawLine(wp0.x, wp0.y, wp1.x, wp1.y, paint)
                 }
-
-                /*val time = (i + offset) * hourStep
-                    canvas.drawText("%2d°C".format(f0.temp),
-                            x - 40.0f, y - 20.0f, tempPaint)
-                    canvas.drawText("%02d:00".format(time),
-                            x - 50.0f, canvas.height - 50.0f, timePaint)*/
             }
         }
         holder.unlockCanvasAndPost(canvas)
@@ -82,5 +96,30 @@ class ForecastView(context: Context, attrs: AttributeSet) :
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
         drawing = false
+    }
+
+    var x0 = 0.0f
+    var y0 = 0.0f
+    var t0 = 0L
+
+    override fun onTouchEvent(event: MotionEvent?): Boolean {
+        when (event!!.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                x0 = event.x
+                y0 = event.y
+            }
+            MotionEvent.ACTION_UP -> {
+                val dx = event.x - x0
+                val dy = event.y - y0
+                if (abs(dy) > abs(dx)) {
+                    var i = currentLine - dy.sign.toInt()
+                    if (i < 0) i = 0
+                    if (i > forecast.lines.size) i = forecast.lines.size
+                    currentLine = i
+                }
+            }
+
+        }
+        return super.onTouchEvent(event)
     }
 }

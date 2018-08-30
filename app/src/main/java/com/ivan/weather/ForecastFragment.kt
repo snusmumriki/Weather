@@ -26,6 +26,7 @@ class ForecastFragment : DaggerFragment() {
                 .map { Forecast(it, 3, 8) }
                 .subscribe { forecast ->
                     forecast_view.forecast = forecast
+                    //context.longToast(forecast.lines.map { it.size }.toString())
                 }
     }
 

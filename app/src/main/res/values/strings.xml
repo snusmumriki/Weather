@@ -6,4 +6,7 @@
     <string name="title_activity_main2">Main2Activity</string>
     <string name="find_tickets">find tickets</string>
     <string name="no_city">No city</string>
+    <string name="r">R</string>
+    <string name="from">From</string>
+    <string name="to">To</string>
 </resources>

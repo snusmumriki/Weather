@@ -22,7 +22,8 @@ class CityPresenter @Inject constructor(private val apiService: MeetupApiService
     //init { Log.i("tag", "new") }
     fun getCityListSingle(countryCode: String? = null): Single<List<City>> =
             apiService.getCities(countryCode)
-                    .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
                     .doOnError { it.printStackTrace() }
                     .map { it.cityList }
 
