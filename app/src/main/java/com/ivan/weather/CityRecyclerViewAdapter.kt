@@ -6,7 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import com.ivan.weather.data.City
-import com.jakewharton.rxbinding2.view.RxView
+import com.jakewharton.rxbinding2.view.clicks
 import io.reactivex.Observable
 import kotlinx.android.synthetic.main.fragment_city.view.*
 import javax.inject.Inject
@@ -19,7 +19,8 @@ class CityRecyclerViewAdapter @Inject constructor(private val presenter: CityPre
     private var items: List<City> = emptyList()
 
     init {
-        presenter.getCityListSingle()
+        //presenter.getCityListSingle()
+        presenter.getCityListObservable()
                 .subscribe { list ->
                     items = list
                     notifyDataSetChanged()
@@ -38,8 +39,7 @@ class CityRecyclerViewAdapter @Inject constructor(private val presenter: CityPre
                     holder.countryCodeView.text = it.countryCode
                 }
                 .flatMap { city ->
-                    RxView.clicks(holder.itemView)
-                            .map { city }
+                    holder.itemView.clicks().map { city }
                 }
                 .subscribe(presenter.getCityObserver())
 

@@ -19,7 +19,8 @@ const val NUM_CITY_TO = 1
 class CityPresenter @Inject constructor(private val apiService: MeetupApiService,
                                         private val numSubject: PublishSubject<Int>,
                                         private val citySubject: PublishSubject<City>,
-                                        private val swapSubject: PublishSubject<Observable<City>>) {
+                                        private val swapSubject: PublishSubject<Observable<City>>,
+                                        private val searchSubject: PublishSubject<String>) {
 
     private val cityInitObservable = getCityListSingle()
             .flatMapObservable { it.toObservable() }
@@ -31,6 +32,20 @@ class CityPresenter @Inject constructor(private val apiService: MeetupApiService
                     .observeOn(AndroidSchedulers.mainThread())
                     .doOnError { it.printStackTrace() }
                     .map { it.cityList }
+
+    fun getCityListObservable(): Observable<List<City>> =
+            apiService.getCities(null)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .doOnError { it.printStackTrace() }
+                    .map { it.cityList }
+                    .flatMapObservable { list ->
+                        searchSubject.flatMap { str ->
+                            list.toObservable()
+                                    .filter { it.name.contains(str, true) or str.isEmpty() }
+                                    .toList().toObservable()
+                        }
+                    }
 
     fun getCityObservable(): Observable<City> = citySubject
 
@@ -55,4 +70,6 @@ class CityPresenter @Inject constructor(private val apiService: MeetupApiService
     fun getCityObserver(): Observer<City> = citySubject
 
     fun getSwapObserver(): Observer<Observable<City>> = swapSubject
+
+    fun getSearchObserver(): Observer<String> = searchSubject
 }

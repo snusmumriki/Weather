@@ -5,10 +5,9 @@ import android.support.design.widget.TabLayout
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentPagerAdapter
-import android.view.Menu
-import android.view.MenuItem
 import dagger.android.support.DaggerAppCompatActivity
 import kotlinx.android.synthetic.main.activity_weather.*
+import org.jetbrains.anko.intentFor
 import javax.inject.Inject
 
 class WeatherActivity : DaggerAppCompatActivity() {
@@ -20,27 +19,17 @@ class WeatherActivity : DaggerAppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_weather)
         setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
         pagerAdapter = SectionsPagerAdapter(supportFragmentManager)
         container.adapter = pagerAdapter
-        //supportActionBar!!.setIcon(R.drawable.vector_drawable_flight)
 
         container.addOnPageChangeListener(TabLayout.TabLayoutOnPageChangeListener(tabs))
         tabs.addOnTabSelectedListener(TabLayout.ViewPagerOnTabSelectedListener(container))
     }
 
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        //menuInflater.inflate(R.menu.menu_weather, menu)
+    override fun onSupportNavigateUp(): Boolean {
+        startActivity(intentFor<MainActivity>())
         return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        val id = item.itemId
-        if (id == R.id.action_settings) {
-            return true
-        }
-
-        return super.onOptionsItemSelected(item)
     }
 
     inner class SectionsPagerAdapter(fm: FragmentManager) : FragmentPagerAdapter(fm) {

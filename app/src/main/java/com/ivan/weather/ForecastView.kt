@@ -39,46 +39,48 @@ class ForecastView(context: Context, attrs: AttributeSet) :
     }
 
     fun showForecast() {
-        val canvas = holder.lockCanvas()
-        canvas.drawColor(lineOptions.backgroundColor)
-        if (forecast.lines.isNotEmpty()) {
-            val forecastLine = forecast.lines[currentLine]
-            val posOffset = if (currentLine == 0)
-                forecast.lineLength - forecastLine.size else 0
-            val tempRange = gridOptions.maxY - gridOptions.minY
-            val cellHeight = canvas.height.toFloat() / tempRange.toFloat()
-            val cellWidth = cellHeight * gridOptions.period
+        if (holder.surface.isValid) {
+            val canvas = holder.lockCanvas()
+            canvas.drawColor(lineOptions.backgroundColor)
+            if (forecast.lines.isNotEmpty()) {
+                val forecastLine = forecast.lines[currentLine]
+                val posOffset = if (currentLine == 0)
+                    forecast.lineLength - forecastLine.size else 0
+                val tempRange = gridOptions.maxY - gridOptions.minY
+                val cellHeight = canvas.height.toFloat() / tempRange.toFloat()
+                val cellWidth = cellHeight * gridOptions.period
 
-            val weatherPoints = forecastLine.mapIndexed { i, w ->
-                val pos = i + posOffset
-                WeatherPoint(pos * cellWidth,
-                        (gridOptions.maxY - w.temp) * cellHeight,
-                        w.temp.roundToInt(),
-                        pos * forecast.hourStep,
-                        w.windSpeed, w.text)
-            }
+                val weatherPoints = forecastLine.mapIndexed { i, w ->
+                    val pos = i + posOffset
+                    WeatherPoint(pos * cellWidth,
+                            (gridOptions.maxY - w.temp) * cellHeight,
+                            w.temp.roundToInt(),
+                            pos * forecast.hourStep,
+                            w.windSpeed, w.text)
+                }
 
-            for (i in 0 until weatherPoints.size) {
-                val wp0 = weatherPoints[i]
+                for (i in 0 until weatherPoints.size) {
+                    val wp0 = weatherPoints[i]
 
-                val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-                paint.style = Paint.Style.FILL_AND_STROKE
-                paint.color = lineOptions.lineColor
-                canvas.drawCircle(wp0.x, wp0.y, lineOptions.pointRadius, paint)
+                    val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+                    paint.style = Paint.Style.FILL_AND_STROKE
+                    paint.color = lineOptions.lineColor
+                    canvas.drawCircle(wp0.x, wp0.y, lineOptions.pointRadius, paint)
 
-                paint.textSize = 40.0f
-                canvas.drawText("%2d°C".format(wp0.temp),
-                        wp0.x - 40.0f, wp0.y - 20.0f, paint)
-                canvas.drawText("%02d:00".format(wp0.time),
-                        wp0.x - 50.0f, canvas.height - 200.0f, paint)
+                    paint.textSize = 40.0f
+                    canvas.drawText("%2d°C".format(wp0.temp),
+                            wp0.x - 40.0f, wp0.y - 20.0f, paint)
+                    canvas.drawText("%02d:00".format(wp0.time),
+                            wp0.x - 50.0f, canvas.height - 200.0f, paint)
 
-                if (i < weatherPoints.size - 1) {
-                    val wp1 = weatherPoints[i + 1]
-                    canvas.drawLine(wp0.x, wp0.y, wp1.x, wp1.y, paint)
+                    if (i < weatherPoints.size - 1) {
+                        val wp1 = weatherPoints[i + 1]
+                        canvas.drawLine(wp0.x, wp0.y, wp1.x, wp1.y, paint)
+                    }
                 }
             }
+            holder.unlockCanvasAndPost(canvas)
         }
-        holder.unlockCanvasAndPost(canvas)
     }
 
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {

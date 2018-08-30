@@ -70,4 +70,8 @@ class CityModule {
     @Provides
     @Singleton
     fun provideSwapSubject() = PublishSubject.create<Observable<City>>()
+
+    @Provides
+    @Singleton
+    fun provideSearchSubject() = PublishSubject.create<String>()
 }
