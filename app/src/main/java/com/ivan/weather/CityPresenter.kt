@@ -6,6 +6,7 @@ import io.reactivex.Observable
 import io.reactivex.Observer
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.rxkotlin.toObservable
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
 import javax.inject.Inject
@@ -16,10 +17,14 @@ const val NUM_CITY_TO = 1
 
 @Singleton
 class CityPresenter @Inject constructor(private val apiService: MeetupApiService,
+                                        private val numSubject: PublishSubject<Int>,
                                         private val citySubject: PublishSubject<City>,
-                                        private val numSubject: PublishSubject<Int>) {
+                                        private val swapSubject: PublishSubject<Observable<City>>) {
 
-    //init { Log.i("tag", "new") }
+    private val cityInitObservable = getCityListSingle()
+            .flatMapObservable { it.toObservable() }
+            .take(2)
+
     fun getCityListSingle(countryCode: String? = null): Single<List<City>> =
             apiService.getCities(countryCode)
                     .subscribeOn(Schedulers.io())
@@ -29,21 +34,25 @@ class CityPresenter @Inject constructor(private val apiService: MeetupApiService
 
     fun getCityObservable(): Observable<City> = citySubject
 
-    fun getCityObserver(): Observer<City> = citySubject
+    fun getCityFromObservable(): Observable<City> =
+            Observable.merge(
+                    numSubject.flatMap { num ->
+                        citySubject.filter { num == NUM_CITY_FROM }
+                                .take(1)
+                    }, swapSubject.flatMap { it.take(1) })
+                    .startWith(cityInitObservable.take(1))
+
+    fun getCityToObservable(): Observable<City> =
+            Observable.merge(
+                    numSubject.flatMap { num ->
+                        citySubject.filter { num == NUM_CITY_TO }
+                                .take(1)
+                    }, swapSubject.flatMap { it.takeLast(1) })
+                    .startWith(cityInitObservable.takeLast(1))
 
     fun getCityNumObserver(): Observer<Int> = numSubject
 
-    fun getCityFromObservable(): Observable<City> =
-            numSubject.flatMap { num ->
-                citySubject.filter { num == NUM_CITY_FROM }
-                        .take(1)
-            }/*.startWith(getCityListSingle().map { it[0] }
-                    .toObservable())*/
+    fun getCityObserver(): Observer<City> = citySubject
 
-    fun getCityToObservable(): Observable<City> =
-            numSubject.flatMap { num ->
-                citySubject.filter { num == NUM_CITY_TO }
-                        .take(1)
-            }/*.startWith(getCityListSingle().map { it[1] }
-                    .toObservable())*/
+    fun getSwapObserver(): Observer<Observable<City>> = swapSubject
 }

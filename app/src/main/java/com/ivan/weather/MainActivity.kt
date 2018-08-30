@@ -18,8 +18,8 @@ class MainActivity : DaggerAppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         val cityFragment = CityFragment()
-        var cityFrom: City
-        var cityTo: City
+        lateinit var cityFrom: City
+        lateinit var cityTo: City
         presenter.getCityObservable()
                 .filter { supportFragmentManager.findFragmentByTag("cityFrag") != null }
                 .subscribe {
@@ -40,6 +40,7 @@ class MainActivity : DaggerAppCompatActivity() {
         Observable.merge(
                 RxView.clicks(city_from_text_view).map { NUM_CITY_FROM },
                 RxView.clicks(city_to_text_view).map { NUM_CITY_TO })
+                .filter { supportFragmentManager.findFragmentByTag("cityFrag") == null }
                 .doOnNext {
                     supportFragmentManager.beginTransaction()
                             .setCustomAnimations(android.R.animator.fade_in,
@@ -48,6 +49,13 @@ class MainActivity : DaggerAppCompatActivity() {
                             .commit()
                 }.subscribe(presenter.getCityNumObserver())
 
-        find_tickets_button.setOnClickListener{ startActivity(intentFor<WeatherActivity>("cityFrom" to "  "))}
+        RxView.clicks(swap_button)
+                .map { Observable.just(cityTo, cityFrom) }
+                .subscribe(presenter.getSwapObserver())
+
+        find_tickets_button.setOnClickListener {
+            startActivity(intentFor<WeatherActivity>(
+                    "cityFrom" to cityFrom, "cityTo" to cityTo))
+        }
     }
 }

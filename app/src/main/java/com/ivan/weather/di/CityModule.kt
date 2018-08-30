@@ -6,6 +6,7 @@ import com.ivan.weather.data.MEETUP_BASE_URL
 import com.ivan.weather.data.MeetupApiService
 import dagger.Module
 import dagger.Provides
+import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
 import okhttp3.Cache
 import okhttp3.CacheControl
@@ -60,9 +61,13 @@ class CityModule {
 
     @Provides
     @Singleton
+    fun provideNumSubject() = PublishSubject.create<Int>()
+
+    @Provides
+    @Singleton
     fun provideCitySubject() = PublishSubject.create<City>()
 
     @Provides
     @Singleton
-    fun provideNumSubject() = PublishSubject.create<Int>()
+    fun provideSwapSubject() = PublishSubject.create<Observable<City>>()
 }

@@ -1,13 +1,16 @@
 package com.ivan.weather.data
 
+import android.os.Parcelable
 import com.google.gson.annotations.SerializedName
+import kotlinx.android.parcel.Parcelize
 import org.itishka.gsonflatten.Flatten
 
 
 data class CityListWrapper(@SerializedName("results") val cityList: List<City>)
 
+@Parcelize
 data class City(@SerializedName("city") val name: String,
-                @SerializedName("country") val countryCode: String)
+                @SerializedName("country") val countryCode: String) : Parcelable
 
 data class ForecastListWrapper(@SerializedName("list") val weatherList: List<Weather>)
 
