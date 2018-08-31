@@ -21,10 +21,11 @@ class CityRecyclerViewAdapter @Inject constructor(private val presenter: CityPre
     init {
         //presenter.getCityListSingle()
         presenter.getCityListObservable()
-                .subscribe { list ->
-                    items = list
+                .subscribe({
+                    items = it
                     notifyDataSetChanged()
-                }
+                }, { it.printStackTrace() })
+
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder =
@@ -32,16 +33,16 @@ class CityRecyclerViewAdapter @Inject constructor(private val presenter: CityPre
                     .inflate(R.layout.fragment_city, parent, false))
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) =
-        Observable.just(position)
-                .map { items[position] }
-                .doOnNext {
-                    holder.nameView.text = it.name
-                    holder.countryCodeView.text = it.countryCode
-                }
-                .flatMap { city ->
-                    holder.itemView.clicks().map { city }
-                }
-                .subscribe(presenter.getCityObserver())
+            Observable.just(position)
+                    .map { items[position] }
+                    .doOnNext {
+                        holder.nameView.text = it.name
+                        holder.countryCodeView.text = it.countryCode
+                    }
+                    .flatMap { city ->
+                        holder.itemView.clicks().map { city }
+                    }
+                    .subscribe(presenter.getCityObserver())
 
     override fun getItemCount(): Int = items.size
 

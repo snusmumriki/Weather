@@ -12,6 +12,9 @@ import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 
+const val FORECAST_HOURS_STEP = 3
+const val FORECAST_NUMBER = 8
+
 @Singleton
 class WeatherPresenter @Inject constructor(private val apiService: WeatherApiService) {
     fun getForecastListSingle(city: City): Single<List<List<Weather>>> =

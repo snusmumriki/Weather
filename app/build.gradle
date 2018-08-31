@@ -73,4 +73,5 @@ dependencies {
     implementation 'com.jakewharton.rxbinding2:rxbinding-kotlin:2.1.1'
     implementation 'com.jakewharton.rxbinding2:rxbinding-appcompat-v7-kotlin:2.1.1'
     implementation "org.jetbrains.anko:anko-commons:0.10.5"
+    implementation 'com.github.lecho:hellocharts-android:v1.5.8'
 }

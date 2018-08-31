@@ -20,6 +20,4 @@ data class Weather(@Flatten("weather::0::main") val text: String,
                    @Flatten("wind::speed") val windSpeed: Float,
                    @SerializedName("dt") val timeSeconds: Int)
 
-data class Forecast(val lines: List<List<Weather>>, val hourStep: Int, val lineLength: Int)
-
 
