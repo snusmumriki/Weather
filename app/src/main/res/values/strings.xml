@@ -10,4 +10,9 @@
     <string name="from">From</string>
     <string name="to">To</string>
     <string name="search">Search</string>
+    <string name="back">Back</string>
+    <string name="adult">Adult</string>
+    <string name="child">Child</string>
+    <string name="baby">Baby</string>
+    <string name="zero">0</string>
 </resources>

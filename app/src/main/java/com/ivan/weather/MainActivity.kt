@@ -12,7 +12,7 @@ import com.jakewharton.rxbinding2.view.clicks
 import dagger.android.support.DaggerAppCompatActivity
 import io.reactivex.Observable
 import kotlinx.android.synthetic.main.activity_main.*
-import org.jetbrains.anko.intentFor
+import org.jetbrains.anko.*
 import javax.inject.Inject
 
 
