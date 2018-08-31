@@ -14,6 +14,7 @@ import javax.inject.Singleton
 
 const val NUM_CITY_FROM = 0
 const val NUM_CITY_TO = 1
+const val TICKETS_MAX_NUM = 9
 
 @Singleton
 class CityPresenter @Inject constructor(private val apiService: MeetupApiService,
@@ -25,8 +26,7 @@ class CityPresenter @Inject constructor(private val apiService: MeetupApiService
     private val cityInitObservable = apiService.getCities(null)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .doOnError { it.printStackTrace() }
-            .retry()
+            .doOnError { it.printStackTrace() }.retry()
             .map { it.cityList }
             .flatMap { it.toObservable() }
             .take(2)
@@ -70,4 +70,5 @@ class CityPresenter @Inject constructor(private val apiService: MeetupApiService
     fun getSwapObserver(): Observer<Observable<City>> = swapSubject
 
     fun getSearchObserver(): Observer<CharSequence> = searchSubject
+
 }

@@ -12,6 +12,7 @@ import com.ivan.weather.data.City
 import dagger.android.support.DaggerAppCompatActivity
 import kotlinx.android.synthetic.main.activity_weather.*
 import org.jetbrains.anko.intentFor
+import org.jetbrains.anko.toast
 import javax.inject.Inject
 import kotlin.math.sign
 
@@ -75,6 +76,7 @@ class WeatherActivity : DaggerAppCompatActivity() {
         override fun onFling(event1: MotionEvent, event2: MotionEvent,
                              velocityX: Float, velocityY: Float): Boolean {
             presenter.getIndexObserver().onNext(-velocityY.sign.toInt())
+            toast("111")
             return true
         }
     }

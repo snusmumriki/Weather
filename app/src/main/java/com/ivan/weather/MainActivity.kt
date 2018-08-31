@@ -14,6 +14,7 @@ import dagger.android.support.DaggerAppCompatActivity
 import io.reactivex.Observable
 import kotlinx.android.synthetic.main.activity_main.*
 import org.jetbrains.anko.intentFor
+import org.jetbrains.anko.toast
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
@@ -33,6 +34,7 @@ class MainActivity : DaggerAppCompatActivity() {
 
         initCityPresenter()
         initDatePick()
+        initTicketCounters()
     }
 
     private fun initCityPresenter() {
@@ -62,12 +64,14 @@ class MainActivity : DaggerAppCompatActivity() {
                 .map { Observable.just(cityTo, cityFrom) }
                 .subscribe(presenter.getSwapObserver())
 
-        find_tickets_button.setOnClickListener {
-            startActivity(intentFor<WeatherActivity>(
-                    "cityFrom" to cityFrom, "cityTo" to cityTo))
-        }
+        find_tickets_button.clicks()
+                .subscribe {
+                    startActivity(intentFor<WeatherActivity>(
+                            "cityFrom" to cityFrom, "cityTo" to cityTo))
+                }
     }
 
+    //дэйтпикеры не связаны с презентером, т. к. их данные не используются
     private fun initDatePick() {
         forward_date_layout.setOnClickListener {
             val calendar = Calendar.getInstance()
@@ -79,6 +83,57 @@ class MainActivity : DaggerAppCompatActivity() {
                     calendar.get(Calendar.MONTH),
                     calendar.get(Calendar.DAY_OF_MONTH))
                     .show()
+        }
+    }
+
+    //счетчики билетов не связаны с презентером, т. к. их данные не используются
+    private fun initTicketCounters() {
+        var adultCounter = 0
+        var childCounter = 0
+        var babyCounter = 0
+        var counter = 0
+
+        adult_add.setOnClickListener {
+            if (counter + 1 <= TICKETS_MAX_NUM) {
+                adultCounter++
+                counter++
+                adult_counter.text = adultCounter.toString()
+            } else toast("Max tickets number is 9")
+        }
+        child_add.setOnClickListener {
+            if (counter + 1 <= TICKETS_MAX_NUM) {
+                childCounter++
+                counter++
+                child_counter.text = childCounter.toString()
+            } else toast("Max tickets number is 9")
+        }
+        baby_add.setOnClickListener {
+            if (counter + 1 <= TICKETS_MAX_NUM) {
+                babyCounter++
+                counter++
+                baby_counter.text = babyCounter.toString()
+            } else toast("Max tickets number is 9")
+        }
+        adult_remove.setOnClickListener {
+            if (adultCounter - 1 >= 0) {
+                adultCounter--
+                counter--
+                adult_counter.text = adultCounter.toString()
+            }
+        }
+        child_remove.setOnClickListener {
+            if (childCounter - 1 >= 0) {
+                childCounter--
+                counter--
+                child_counter.text = childCounter.toString()
+            }
+        }
+        baby_remove.setOnClickListener {
+            if (babyCounter - 1 >= 0) {
+                babyCounter--
+                counter--
+                baby_counter.text = babyCounter.toString()
+            }
         }
     }
 

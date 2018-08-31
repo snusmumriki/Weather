@@ -34,7 +34,9 @@ class ForecastFragment : DaggerFragment() {
 
         val city = arguments.getParcelable<City>("city")
 
-        presenter.getForecastObservable(City("London", "gb"))
+        //presenter.getForecastObservable(City("London", "gb"))
+        presenter.getForecastObservable(city!!)
+                .doOnNext { day_view.text = it.dayOfWeek }
                 .subscribe({
                     val list = it.weatherList
                     val offset = it.indexOffset
@@ -70,6 +72,6 @@ class ForecastFragment : DaggerFragment() {
                     val x = v.centerX()
                     val y = v.centerY()
                     graph_view.setZoomLevel(x, y, 2f)
-                }, { context.toast("ERROR") })
+                }, { context.toast("Internet connection failed") })
     }
 }

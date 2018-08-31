@@ -3,7 +3,9 @@ package com.ivan.weather
 import com.ivan.weather.data.*
 import io.reactivex.Observable
 import io.reactivex.Observer
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.rxkotlin.toObservable
+import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import java.text.SimpleDateFormat
 import java.util.*
@@ -34,18 +36,18 @@ class WeatherPresenter @Inject constructor(private val apiService: WeatherApiSer
 
     fun getForecastObservable(city: City): Observable<Forecast> =
             apiService.getForecast(cityWithCountryCode(city))
-//                    .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                    //.doOnError { it.printStackTrace() }.retry()
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .doOnError { it.printStackTrace() }.retry()
                     .map { it.weatherList }
                     .flatMap { it.toObservable() }
                     .groupBy (::weatherWeekDayNum)
                     .flatMap { it.toList().toObservable() }
                     .toSortedList { l0, l1 -> l0[0].timeSeconds - l1[0].timeSeconds }
                     /*.flatMapObservable { list ->
-                        indexSubject.scan(0, Int::plus)
-                                .startWith(0)
-                                .map { if (it < 0) 0 else it }
-                                .map { if (it > list.size - 1) list.size - 1 else it }
+                        indexSubject.scan(0) { sum, num ->
+                            sum + if ((0 <= sum + num) or (sum + num < list.size)) num else 0
+                        }//.startWith(0)
                                 .map { createForecast(it, list) }
                     }*/
                     .map { createForecast(1, it) }.toObservable()
