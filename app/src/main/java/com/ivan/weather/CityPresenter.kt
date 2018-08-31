@@ -4,10 +4,10 @@ import com.ivan.weather.data.City
 import com.ivan.weather.data.MeetupApiService
 import io.reactivex.Observable
 import io.reactivex.Observer
-import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.rxkotlin.toObservable
 import io.reactivex.schedulers.Schedulers
+import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -20,26 +20,24 @@ class CityPresenter @Inject constructor(private val apiService: MeetupApiService
                                         private val numSubject: PublishSubject<Int>,
                                         private val citySubject: PublishSubject<City>,
                                         private val swapSubject: PublishSubject<Observable<City>>,
-                                        private val searchSubject: PublishSubject<String>) {
+                                        private val searchSubject: BehaviorSubject<CharSequence>) {
 
-    private val cityInitObservable = getCityListSingle()
-            .flatMapObservable { it.toObservable() }
+    private val cityInitObservable = apiService.getCities(null)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .doOnError { it.printStackTrace() }
+            .retry()
+            .map { it.cityList }
+            .flatMap { it.toObservable() }
             .take(2)
-
-    fun getCityListSingle(countryCode: String? = null): Single<List<City>> =
-            apiService.getCities(countryCode)
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .doOnError { it.printStackTrace() }
-                    .map { it.cityList }
 
     fun getCityListObservable(): Observable<List<City>> =
             apiService.getCities(null)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
-                    .doOnError { it.printStackTrace() }
+                    .doOnError { it.printStackTrace() }.retry()
                     .map { it.cityList }
-                    .flatMapObservable { list ->
+                    .flatMap { list ->
                         searchSubject.flatMap { str ->
                             list.toObservable()
                                     .filter { it.name.contains(str, true) or str.isEmpty() }
@@ -71,5 +69,5 @@ class CityPresenter @Inject constructor(private val apiService: MeetupApiService
 
     fun getSwapObserver(): Observer<Observable<City>> = swapSubject
 
-    fun getSearchObserver(): Observer<String> = searchSubject
+    fun getSearchObserver(): Observer<CharSequence> = searchSubject
 }

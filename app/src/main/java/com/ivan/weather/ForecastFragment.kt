@@ -11,6 +11,7 @@ import kotlinx.android.synthetic.main.fragment_weather.*
 import lecho.lib.hellocharts.gesture.ContainerScrollType
 import lecho.lib.hellocharts.gesture.ZoomType
 import lecho.lib.hellocharts.model.*
+import org.jetbrains.anko.toast
 import javax.inject.Inject
 import kotlin.math.roundToInt
 
@@ -31,22 +32,24 @@ class ForecastFragment : DaggerFragment() {
         graph_view.isZoomEnabled = true
         graph_view.zoomType = ZoomType.HORIZONTAL
 
-        presenter.getForecastListSingle(City("London", "gb"))
-                .map { it[1] }
-                .toObservable()
+        val city = arguments.getParcelable<City>("city")
+
+        presenter.getForecastObservable(City("London", "gb"))
                 .subscribe({
-                    val pointValues = it.mapIndexed { i, w ->
-                        val time = i * FORECAST_HOURS_STEP
+                    val list = it.weatherList
+                    val offset = it.indexOffset
+                    val pointValues = list.mapIndexed { i, w ->
+                        val time = offset + i * FORECAST_HOURS_STEP
                         PointValue(time.toFloat(), w.temp)
                                 .setLabel("${w.temp.roundToInt()}°C")
                     }
-                    val axisValuesTop = it.mapIndexed { i, w ->
-                        val time = i * FORECAST_HOURS_STEP
+                    val axisValuesTop = list.mapIndexed { i, w ->
+                        val time = offset + i * FORECAST_HOURS_STEP
                         AxisValue(time.toFloat())
                                 .setLabel("${w.windSpeed}m/s")
                     }
-                    val axisValuesBottom = it.mapIndexed { i, w ->
-                        val time = i * FORECAST_HOURS_STEP
+                    val axisValuesBottom = list.mapIndexed { i, _ ->
+                        val time = offset + i * FORECAST_HOURS_STEP
                         AxisValue(time.toFloat())
                                 .setLabel("%02d:00".format(time))
                     }
@@ -67,17 +70,6 @@ class ForecastFragment : DaggerFragment() {
                     val x = v.centerX()
                     val y = v.centerY()
                     graph_view.setZoomLevel(x, y, 2f)
-                }, { it.printStackTrace() })
-    }
-
-    companion object {
-        const val SECTION_NUMBER = "section_number"
-        fun newInstance(sectionNumber: Int): ForecastFragment {
-            val fragment = ForecastFragment()
-            val args = Bundle()
-            args.putInt(SECTION_NUMBER, sectionNumber)
-            fragment.arguments = args
-            return fragment
-        }
+                }, { context.toast("ERROR") })
     }
 }

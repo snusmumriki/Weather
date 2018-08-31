@@ -1,5 +1,6 @@
 package com.ivan.weather
 
+import android.app.DatePickerDialog
 import android.app.SearchManager
 import android.content.Context
 import android.os.Bundle
@@ -12,13 +13,15 @@ import com.jakewharton.rxbinding2.view.clicks
 import dagger.android.support.DaggerAppCompatActivity
 import io.reactivex.Observable
 import kotlinx.android.synthetic.main.activity_main.*
-import org.jetbrains.anko.*
+import org.jetbrains.anko.intentFor
+import java.text.SimpleDateFormat
+import java.util.*
 import javax.inject.Inject
 
 
-
-
 class MainActivity : DaggerAppCompatActivity() {
+
+
     @Inject
     lateinit var presenter: CityPresenter
     private val cityFragment = CityFragment()
@@ -28,6 +31,11 @@ class MainActivity : DaggerAppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        initCityPresenter()
+        initDatePick()
+    }
+
+    private fun initCityPresenter() {
         lateinit var cityFrom: City
         lateinit var cityTo: City
 
@@ -60,6 +68,20 @@ class MainActivity : DaggerAppCompatActivity() {
         }
     }
 
+    private fun initDatePick() {
+        forward_date_layout.setOnClickListener {
+            val calendar = Calendar.getInstance()
+            DatePickerDialog(this, { _, year, month, date ->
+                val format = SimpleDateFormat("dd MMM, E", Locale.US)
+                calendar.set(year, month, date)
+                forward_date_view.text = format.format(calendar.time)
+            }, calendar.get(Calendar.YEAR),
+                    calendar.get(Calendar.MONTH),
+                    calendar.get(Calendar.DAY_OF_MONTH))
+                    .show()
+        }
+    }
+
     private fun isCityFragmentAdded() =
             supportFragmentManager.findFragmentByTag("cityFrag") != null
 
@@ -81,24 +103,21 @@ class MainActivity : DaggerAppCompatActivity() {
         menuInflater.inflate(R.menu.menu_city, menu)
 
         searchItem = menu.findItem(R.id.city_search)
-        searchItem.setOnActionExpandListener(object : MenuItem.OnActionExpandListener{
+        searchItem.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
             override fun onMenuItemActionExpand(item: MenuItem?): Boolean = true
-
             override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
+                if (item is SearchView)
+                    item.isIconified = false
                 removeCityFragment()
                 return true
             }
-
         })
-        val searchManager = this@MainActivity.getSystemService(Context.SEARCH_SERVICE) as SearchManager
+        val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
 
         val searchView = searchItem.actionView as SearchView
         searchView.queryTextChanges()
-                .skipInitialValue()
-                .map { it.toString() }
-                .startWith(" ")
                 .subscribe(presenter.getSearchObserver())
-        searchView.setSearchableInfo(searchManager.getSearchableInfo(this@MainActivity.componentName))
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName))
         return super.onCreateOptionsMenu(menu)
     }
 

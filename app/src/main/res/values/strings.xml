@@ -15,4 +15,6 @@
     <string name="child">Child</string>
     <string name="baby">Baby</string>
     <string name="zero">0</string>
+    <string name="day_of_week">Day of week</string>
+    <string name="forward">Forward</string>
 </resources>

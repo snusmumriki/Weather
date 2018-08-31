@@ -7,6 +7,7 @@ import com.ivan.weather.data.MeetupApiService
 import dagger.Module
 import dagger.Provides
 import io.reactivex.Observable
+import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
 import okhttp3.Cache
 import okhttp3.CacheControl
@@ -73,5 +74,5 @@ class CityModule {
 
     @Provides
     @Singleton
-    fun provideSearchSubject() = PublishSubject.create<String>()
+    fun provideSearchSubject() = BehaviorSubject.create<CharSequence>()
 }

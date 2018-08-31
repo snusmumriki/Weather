@@ -2,11 +2,8 @@ package com.ivan.weather
 
 import com.google.gson.GsonBuilder
 import com.ivan.weather.data.City
-import com.ivan.weather.data.MEETUP_BASE_URL
-import com.ivan.weather.data.MeetupApiService
 import com.ivan.weather.data.WeatherApiService
-import io.reactivex.Observable
-import io.reactivex.subjects.PublishSubject
+import io.reactivex.subjects.BehaviorSubject
 import okhttp3.CacheControl
 import okhttp3.OkHttpClient
 import org.itishka.gsonflatten.FlattenTypeAdapterFactory
@@ -23,7 +20,7 @@ import java.util.concurrent.TimeUnit
  */
 
 class ExampleUnitTest {
-    @Test
+    /*@Test
     fun meetupApiTest() {
         val cityPresenter = CityPresenter(
                 Retrofit.Builder()
@@ -32,15 +29,15 @@ class ExampleUnitTest {
                         .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                         .build()
                         .create(MeetupApiService::class.java), PublishSubject.create(), PublishSubject.create())
-                .getCityListSingle()
+                .getCityListObservable()
                 .subscribe { list -> print(list) }
-    }
+    }*/
 
-    //@Test
+    @Test
     fun weatherApiTest() {
         val cityPresenter = WeatherPresenter(
                 Retrofit.Builder()
-                        .baseUrl("https://api.openweathermap.org")
+                        .baseUrl("http://api.openweathermap.org")
                         .addConverterFactory(GsonConverterFactory.create(GsonBuilder()
                                 .registerTypeAdapterFactory(FlattenTypeAdapterFactory())
                                 .create()))
@@ -55,9 +52,8 @@ class ExampleUnitTest {
                                             .build())
                                 }.build())
                         .build()
-                        .create(WeatherApiService::class.java))
-        cityPresenter.getForecastListSingle(City("London", "uk"))
-                .flatMapObservable { Observable.fromIterable(it) }
-                .subscribe { list -> println(list + " " + list.size) }
+                        .create(WeatherApiService::class.java), BehaviorSubject.create())
+                .getForecastObservable(City("London", "uk"))
+                .subscribe (::println)
     }
 }

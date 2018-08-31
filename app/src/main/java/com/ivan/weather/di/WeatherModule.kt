@@ -7,6 +7,7 @@ import com.ivan.weather.data.WEATHER_BASE_URL
 import com.ivan.weather.data.WeatherApiService
 import dagger.Module
 import dagger.Provides
+import io.reactivex.subjects.BehaviorSubject
 import okhttp3.Cache
 import okhttp3.CacheControl
 import okhttp3.OkHttpClient
@@ -49,7 +50,7 @@ class WeatherModule {
     @Singleton
     fun provideGson(): Gson =
             GsonBuilder()
-                    .registerTypeAdapterFactory(FlattenTypeAdapterFactory ())
+                    .registerTypeAdapterFactory(FlattenTypeAdapterFactory())
                     .create()
 
     @Provides
@@ -63,4 +64,8 @@ class WeatherModule {
                     .client(client)
                     .build()
                     .create(WeatherApiService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideIndexSubject() = BehaviorSubject.create<Int>()
 }
