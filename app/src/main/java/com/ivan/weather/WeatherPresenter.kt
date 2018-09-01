@@ -1,5 +1,6 @@
 package com.ivan.weather
 
+import android.util.Log
 import com.ivan.weather.data.*
 import io.reactivex.Observable
 import io.reactivex.Observer
@@ -13,7 +14,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 const val FORECAST_HOURS_STEP = 3
-const val FORECAST_NUMBER = 8
+const val WEATHER_NUMBER = 8
 
 private fun weatherWeekDayNum(weather: Weather): Int {
     val calendar = Calendar.getInstance()
@@ -23,7 +24,7 @@ private fun weatherWeekDayNum(weather: Weather): Int {
 
 private fun createForecast(i: Int, forecastList: List<List<Weather>>): Forecast {
     var offset = 0
-    if (i == 0) offset += FORECAST_NUMBER - forecastList.size
+    if (i == 0) offset += WEATHER_NUMBER - forecastList.size
     val list = forecastList[i]
     val date = Date(list[0].timeSeconds * 1000L)
     val format = SimpleDateFormat("EEEE", Locale.US)
@@ -41,16 +42,19 @@ class WeatherPresenter @Inject constructor(private val apiService: WeatherApiSer
                     .doOnError { it.printStackTrace() }.retry()
                     .map { it.weatherList }
                     .flatMap { it.toObservable() }
-                    .groupBy (::weatherWeekDayNum)
+                    .groupBy(::weatherWeekDayNum)
                     .flatMap { it.toList().toObservable() }
                     .toSortedList { l0, l1 -> l0[0].timeSeconds - l1[0].timeSeconds }
                     .flatMapObservable { list ->
                         indexSubject.scan(0) { sum, num ->
-                            sum + if ((0 <= sum + num) or (sum + num < list.size)) num else 0
+                            sum + if ((0 <= sum + num)
+                                    and (sum + num < list.size))
+                                num else 0
                         }//.startWith(0)
+                                .doOnNext { Log.i("tag", it.toString()) }
                                 .map { createForecast(it, list) }
                     }
-                    //.map { createForecast(1, it) }.toObservable()
+    //.map { createForecast(1, it) }.toObservable()
 
     fun getIndexObserver(): Observer<Int> = indexSubject
 }

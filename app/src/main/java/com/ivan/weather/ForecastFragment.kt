@@ -5,11 +5,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.ivan.weather.data.City
+import com.bumptech.glide.Glide
+import com.ivan.weather.data.iconCodeToUrl
 import dagger.android.support.DaggerFragment
 import kotlinx.android.synthetic.main.fragment_weather.*
 import lecho.lib.hellocharts.gesture.ContainerScrollType
 import lecho.lib.hellocharts.gesture.ZoomType
+import lecho.lib.hellocharts.listener.LineChartOnValueSelectListener
 import lecho.lib.hellocharts.model.*
 import org.jetbrains.anko.toast
 import javax.inject.Inject
@@ -32,26 +34,23 @@ class ForecastFragment : DaggerFragment() {
         graph_view.isZoomEnabled = true
         graph_view.zoomType = ZoomType.HORIZONTAL
 
-        val city = arguments.getParcelable<City>("city")
-
-        //presenter.getForecastObservable(City("London", "gb"))
-        presenter.getForecastObservable(city!!)
+        presenter.getForecastObservable(arguments.getParcelable("city")!!)
                 .doOnNext { day_view.text = it.dayOfWeek }
                 .subscribe({
                     val list = it.weatherList
                     val offset = it.indexOffset
                     val pointValues = list.mapIndexed { i, w ->
-                        val time = offset + i * FORECAST_HOURS_STEP
+                        val time = (offset + i) * FORECAST_HOURS_STEP
                         PointValue(time.toFloat(), w.temp)
                                 .setLabel("${w.temp.roundToInt()}°C")
                     }
                     val axisValuesTop = list.mapIndexed { i, w ->
-                        val time = offset + i * FORECAST_HOURS_STEP
+                        val time = (offset + i) * FORECAST_HOURS_STEP
                         AxisValue(time.toFloat())
                                 .setLabel("${w.windSpeed}m/s")
                     }
                     val axisValuesBottom = list.mapIndexed { i, _ ->
-                        val time = offset + i * FORECAST_HOURS_STEP
+                        val time = (offset + i) * FORECAST_HOURS_STEP
                         AxisValue(time.toFloat())
                                 .setLabel("%02d:00".format(time))
                     }
@@ -66,12 +65,25 @@ class ForecastFragment : DaggerFragment() {
                     data.axisXBottom = Axis(axisValuesBottom)
                     data.axisXBottom.textColor = Color.DKGRAY
 
-                    graph_view.lineChartData = data
+                    graph_view.onValueTouchListener = object : LineChartOnValueSelectListener {
+                        override fun onValueSelected(lineIndex: Int, pointIndex: Int, value: PointValue) {
+                            val weather = list[pointIndex]
+                            weather_text.text = weather.text
+                            Glide.with(context)
+                                    .load(iconCodeToUrl(weather.iconCode))
+                                    .into(weather_image)
+                        }
 
-                    val v = graph_view.currentViewport
-                    val x = v.centerX()
-                    val y = v.centerY()
-                    graph_view.setZoomLevel(x, y, 2f)
+                        override fun onValueDeselected() {
+
+                        }
+                    }
+
+                    graph_view.lineChartData = data
+                    val y = graph_view.currentViewport.centerY()
+                    val zoomLevel = 2f * (list.size.toFloat() / WEATHER_NUMBER.toFloat())
+                    graph_view.setZoomLevel(0f, y, zoomLevel)
+                    //graph_view.scrollX = 0
                 }, { context.toast("Internet connection failed") })
     }
 }
