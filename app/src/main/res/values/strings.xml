@@ -17,4 +17,5 @@
     <string name="zero">0</string>
     <string name="day_of_week">Day of week</string>
     <string name="forward">Forward</string>
+    <string name="swipe_here">swipe here to change day</string>
 </resources>

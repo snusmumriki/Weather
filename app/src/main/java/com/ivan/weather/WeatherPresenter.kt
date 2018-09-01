@@ -44,13 +44,13 @@ class WeatherPresenter @Inject constructor(private val apiService: WeatherApiSer
                     .groupBy (::weatherWeekDayNum)
                     .flatMap { it.toList().toObservable() }
                     .toSortedList { l0, l1 -> l0[0].timeSeconds - l1[0].timeSeconds }
-                    /*.flatMapObservable { list ->
+                    .flatMapObservable { list ->
                         indexSubject.scan(0) { sum, num ->
                             sum + if ((0 <= sum + num) or (sum + num < list.size)) num else 0
                         }//.startWith(0)
                                 .map { createForecast(it, list) }
-                    }*/
-                    .map { createForecast(1, it) }.toObservable()
+                    }
+                    //.map { createForecast(1, it) }.toObservable()
 
     fun getIndexObserver(): Observer<Int> = indexSubject
 }
