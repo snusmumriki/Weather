@@ -68,4 +68,10 @@ class WeatherModule {
     @Provides
     @Singleton
     fun provideIndexSubject() = BehaviorSubject.create<Int>()
+
+    /*@Provides
+    @Singleton
+    fun provideDao(app: App) =
+            Room.databaseBuilder(app,  WeatherDatabase::class.java, "weather_db")
+                    .build().getDao()*/
 }

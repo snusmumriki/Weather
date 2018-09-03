@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.support.v7.widget.SearchView
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import com.ivan.weather.data.City
 import com.ivan.weather.data.TicketCounter
 import com.jakewharton.rxbinding2.support.v7.widget.queryTextChanges
@@ -43,8 +44,8 @@ class MainActivity : DaggerAppCompatActivity() {
     }
 
     private fun initCityPresenter() {
-        lateinit var cityFrom: City
-        lateinit var cityTo: City
+        var cityFrom: City? = null
+        var cityTo: City? = null
 
         presenter.getCityObservable()
                 .filter { isCityFragmentAdded() }
@@ -71,10 +72,11 @@ class MainActivity : DaggerAppCompatActivity() {
 
         swap_button.clicks()
                 .doOnSubscribe{compositeDisposable.add(it)}
-                .map { Observable.just(cityTo, cityFrom) }
+                .map { Observable.just(cityTo!!, cityFrom!!) }
                 .subscribe(presenter.getCitySwapObserver())
 
         find_tickets_button.clicks()
+                .filter{(cityFrom != null) or (cityTo != null)}
                 .doOnSubscribe{compositeDisposable.add(it)}
                 .subscribe {
                     startActivity(intentFor<WeatherActivity>(
@@ -99,6 +101,29 @@ class MainActivity : DaggerAppCompatActivity() {
                     calendar.get(Calendar.DAY_OF_MONTH))
                     .show()
         }
+
+        button_add_back.setOnClickListener {
+            button_add_back.visibility = View.GONE
+            hint_back.visibility = View.VISIBLE
+            back_date_view.visibility = View.VISIBLE
+            remove_back_date.visibility = View.VISIBLE
+            val calendar = Calendar.getInstance()
+            DatePickerDialog(this, { _, year, month, date ->
+                val format = SimpleDateFormat("dd MMM, E", Locale.US)
+                calendar.set(year, month, date)
+                back_date_view.text = format.format(calendar.time)
+            }, calendar.get(Calendar.YEAR),
+                    calendar.get(Calendar.MONTH),
+                    calendar.get(Calendar.DAY_OF_MONTH))
+                    .show()
+        }
+
+        remove_back_date.setOnClickListener {
+            hint_back.visibility = View.INVISIBLE
+            back_date_view.visibility = View.INVISIBLE
+            button_add_back.visibility = View.VISIBLE
+            remove_back_date.visibility = View.INVISIBLE
+        }
     }
 
     private fun initTicketCounters() {
@@ -117,7 +142,6 @@ class MainActivity : DaggerAppCompatActivity() {
                         .map { TicketCounter(0, 0, it) })
                 .scan(TicketCounter(0, 0, 0)) { accumulator, value ->
                     value.setCounter(accumulator)
-                    //value
                     when {
                         value.sum() > TICKETS_MAX_NUM -> {
                             toast("max tickets amount is 9")
@@ -130,7 +154,7 @@ class MainActivity : DaggerAppCompatActivity() {
                         value.hasNegative() -> accumulator
                         else -> value
                     }
-                }.cacheWithInitialCapacity(1)
+                }//.cacheWithInitialCapacity(1)
                 .doOnSubscribe{compositeDisposable.add(it)}
                 .subscribe(presenter.getTicketCounterObserver())
 

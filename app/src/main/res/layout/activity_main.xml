@@ -22,27 +22,27 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
-            android:textColor="@android:color/primary_text_light"
             android:id="@+id/city_from_text_view"
             android:layout_width="match_parent"
             android:layout_height="60dp"
             android:text="@string/no_city"
+            android:textColor="@android:color/primary_text_light"
             android:textSize="22sp" />
 
         <TextView
-            android:textColor="@android:color/primary_text_light"
             android:id="@+id/city_to_text_view"
             android:layout_width="match_parent"
             android:layout_height="60dp"
             android:text="@string/no_city"
+            android:textColor="@android:color/primary_text_light"
             android:textSize="22sp" />
 
         <LinearLayout
-            android:layout_marginTop="18dp"
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:orientation="horizontal"
-            android:baselineAligned="false">
+            android:layout_marginTop="18dp"
+            android:baselineAligned="false"
+            android:orientation="horizontal">
 
             <RelativeLayout
                 android:layout_width="0dp"
@@ -59,14 +59,14 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/forward"
-                        android:textSize="16sp"/>
+                        android:textSize="16sp" />
 
                     <TextView
                         android:id="@+id/forward_date_view"
-                        android:textSize="18sp"
-                        android:textColor="@android:color/primary_text_light"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
+                        android:layout_height="wrap_content"
+                        android:textColor="@android:color/primary_text_light"
+                        android:textSize="18sp" />
                 </LinearLayout>
             </RelativeLayout>
 
@@ -81,27 +81,37 @@
                     android:orientation="vertical">
 
                     <TextView
+                        android:visibility="invisible"
+                        android:id="@+id/hint_back"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
+                        android:layout_height="wrap_content"
+                        android:text="@string/back"
+                        android:textSize="16sp" />
 
                     <TextView
+                        android:visibility="invisible"
+                        android:id="@+id/back_date_view"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
+                        android:layout_height="wrap_content"
+                        android:textColor="@android:color/primary_text_light"
+                        android:textSize="18sp" />
                 </LinearLayout>
 
                 <ImageView
+                    android:visibility="invisible"
+                    android:id="@+id/remove_back_date"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"
-                    android:layout_marginEnd="15dp"
+                    android:layout_alignParentTop="true"
                     android:src="@drawable/vector_drawable_highlight_off" />
 
                 <Button
                     android:id="@+id/button_add_back"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_centerInParent="true"
+                    android:layout_alignParentStart="true"
+                    android:layout_alignParentTop="true"
                     android:drawableRight="@drawable/vector_drawable_add_circle"
                     android:text="@string/back" />
             </RelativeLayout>
@@ -149,7 +159,7 @@
             android:layout_weight="1"
             android:orientation="vertical">
 
-            <ImageView
+            <ImageButton
                 android:id="@+id/adult_add"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -183,10 +193,10 @@
                 android:text="@string/adult"
                 android:textSize="16sp" />
 
-            <ImageView
+            <ImageButton
                 android:id="@+id/adult_remove"
                 android:layout_width="wrap_content"
-                android:layout_height="30dp"
+                android:layout_height="wrap_content"
                 android:src="@drawable/vector_drawable_remove_circle" />
         </LinearLayout>
 
@@ -197,7 +207,7 @@
             android:layout_weight="1"
             android:orientation="vertical">
 
-            <ImageView
+            <ImageButton
                 android:id="@+id/child_add"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -231,10 +241,10 @@
                 android:text="@string/child"
                 android:textSize="16sp" />
 
-            <ImageView
+            <ImageButton
                 android:id="@+id/child_remove"
                 android:layout_width="wrap_content"
-                android:layout_height="30dp"
+                android:layout_height="wrap_content"
                 android:src="@drawable/vector_drawable_remove_circle" />
         </LinearLayout>
 
@@ -244,7 +254,7 @@
             android:layout_weight="1"
             android:orientation="vertical">
 
-            <ImageView
+            <ImageButton
                 android:id="@+id/baby_add"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -278,10 +288,10 @@
                 android:text="@string/baby"
                 android:textSize="16sp" />
 
-            <ImageView
+            <ImageButton
                 android:id="@+id/baby_remove"
                 android:layout_width="wrap_content"
-                android:layout_height="30dp"
+                android:layout_height="wrap_content"
                 android:src="@drawable/vector_drawable_remove_circle" />
         </LinearLayout>
     </LinearLayout>

@@ -39,7 +39,7 @@ constructor(private val apiService: MeetupApiService,
             .map { it.cityList }
             .flatMap { it.toObservable() }
             .take(2)
-            .cacheWithInitialCapacity(1)
+            //.cacheWithInitialCapacity(1)
 
     fun getCityListObservable(): Observable<List<City>> =
             apiService.getCities(null)
@@ -53,7 +53,7 @@ constructor(private val apiService: MeetupApiService,
                                     .filter { it.name.contains(str, true) or str.isEmpty() }
                                     .toList().toObservable()
                         }
-                    }.cacheWithInitialCapacity(1)
+                    }//.cacheWithInitialCapacity(1)
 
     fun getCityObservable(): Observable<City> = citySubject
 

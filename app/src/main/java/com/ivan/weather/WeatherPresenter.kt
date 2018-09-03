@@ -44,7 +44,8 @@ private fun createForecast(i: Int, forecastList: List<List<Weather>>): Forecast 
 
 @Singleton
 class WeatherPresenter @Inject constructor(private val apiService: WeatherApiService,
-                                           private val indexSubject: BehaviorSubject<Int>) {
+                                           private val indexSubject: BehaviorSubject<Int>
+                                           /*,private  val weatherDao: WeatherDao*/) {
 
     fun getForecastObservable(city: City): Observable<Forecast> =
             apiService.getForecast(city.lat, city.lon)
@@ -62,7 +63,7 @@ class WeatherPresenter @Inject constructor(private val apiService: WeatherApiSer
                                     and (sum + num < list.size))
                                 num else 0
                         }.map { createForecast(it, list) }
-                    }
+                    }//.doOnNext{weatherDao.insertForecast(it)}
 
     fun getIndexObserver(): Observer<Int> = indexSubject
 }
