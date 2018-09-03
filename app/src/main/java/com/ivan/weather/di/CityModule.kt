@@ -4,6 +4,7 @@ import com.ivan.weather.App
 import com.ivan.weather.data.City
 import com.ivan.weather.data.MEETUP_BASE_URL
 import com.ivan.weather.data.MeetupApiService
+import com.ivan.weather.data.TicketCounter
 import dagger.Module
 import dagger.Provides
 import io.reactivex.Observable
@@ -75,4 +76,8 @@ class CityModule {
     @Provides
     @Singleton
     fun provideSearchSubject() = BehaviorSubject.create<CharSequence>()
+
+    @Provides
+    @Singleton
+    fun provideTicketCounterSubject() = PublishSubject.create<TicketCounter>()
 }

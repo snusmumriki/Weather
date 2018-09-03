@@ -7,13 +7,13 @@ import android.view.View
 import android.view.ViewGroup
 import com.bumptech.glide.Glide
 import com.ivan.weather.data.iconCodeToUrl
+import com.jakewharton.rxbinding2.view.clicks
 import dagger.android.support.DaggerFragment
-import kotlinx.android.synthetic.main.fragment_weather.*
+import kotlinx.android.synthetic.main.fragment_forecast.*
 import lecho.lib.hellocharts.gesture.ContainerScrollType
 import lecho.lib.hellocharts.gesture.ZoomType
 import lecho.lib.hellocharts.listener.LineChartOnValueSelectListener
 import lecho.lib.hellocharts.model.*
-import org.jetbrains.anko.toast
 import javax.inject.Inject
 import kotlin.math.roundToInt
 
@@ -24,7 +24,7 @@ class ForecastFragment : DaggerFragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? =
-            inflater.inflate(R.layout.fragment_weather, container, false)
+            inflater.inflate(R.layout.fragment_forecast, container, false)
 
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -33,6 +33,11 @@ class ForecastFragment : DaggerFragment() {
         graph_view.setContainerScrollEnabled(true, ContainerScrollType.HORIZONTAL)
         graph_view.isZoomEnabled = true
         graph_view.zoomType = ZoomType.HORIZONTAL
+
+        previous_day_view.clicks().map { -1 }
+                .subscribe(presenter.getIndexObserver())
+        next_day_view.clicks().map { +1 }
+                .subscribe(presenter.getIndexObserver())
 
         presenter.getForecastObservable(arguments.getParcelable("city")!!)
                 .doOnNext { day_view.text = it.dayOfWeek }
@@ -67,23 +72,27 @@ class ForecastFragment : DaggerFragment() {
 
                     graph_view.onValueTouchListener = object : LineChartOnValueSelectListener {
                         override fun onValueSelected(lineIndex: Int, pointIndex: Int, value: PointValue) {
+                            hint_view.visibility = View.GONE
                             val weather = list[pointIndex]
                             weather_text.text = weather.text
-                            Glide.with(context)
-                                    .load(iconCodeToUrl(weather.iconCode))
-                                    .into(weather_image)
+                            if (context != null)
+                                Glide.with(context)
+                                        .load(iconCodeToUrl(weather.iconCode))
+                                        .into(weather_image)
                         }
 
                         override fun onValueDeselected() {
 
                         }
                     }
-
                     graph_view.lineChartData = data
                     val y = graph_view.currentViewport.centerY()
+                    //делает зум пропорционально количеству точек в графе
                     val zoomLevel = 2f * (list.size.toFloat() / WEATHER_NUMBER.toFloat())
                     graph_view.setZoomLevel(0f, y, zoomLevel)
-                    //graph_view.scrollX = 0
-                }, { context.toast("Internet connection failed") })
+
+                    previous_day_view.text = it.previousDayOfWeek
+                    next_day_view.text = it.nextDayOfWeek
+                }, { it.printStackTrace() })
     }
 }

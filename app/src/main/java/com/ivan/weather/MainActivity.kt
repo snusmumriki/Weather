@@ -8,10 +8,12 @@ import android.support.v7.widget.SearchView
 import android.view.Menu
 import android.view.MenuItem
 import com.ivan.weather.data.City
+import com.ivan.weather.data.TicketCounter
 import com.jakewharton.rxbinding2.support.v7.widget.queryTextChanges
 import com.jakewharton.rxbinding2.view.clicks
 import dagger.android.support.DaggerAppCompatActivity
 import io.reactivex.Observable
+import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.activity_main.*
 import org.jetbrains.anko.intentFor
 import org.jetbrains.anko.toast
@@ -25,13 +27,16 @@ class MainActivity : DaggerAppCompatActivity() {
 
     @Inject
     lateinit var presenter: CityPresenter
-    private val cityFragment = CityFragment()
     lateinit var searchItem: MenuItem
+
+    private val cityFragment = CityFragment()
+    private val compositeDisposable = CompositeDisposable()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        supportActionBar!!.title = "Choose the flight details"
         initCityPresenter()
         initDatePick()
         initTicketCounters()
@@ -44,13 +49,16 @@ class MainActivity : DaggerAppCompatActivity() {
         presenter.getCityObservable()
                 .filter { isCityFragmentAdded() }
                 .doOnNext { searchItem.collapseActionView() }
+                .doOnSubscribe{compositeDisposable.add(it)}
                 .subscribe { removeCityFragment() }
 
         presenter.getCityFromObservable()
                 .doOnNext { cityFrom = it }
+                .doOnSubscribe{compositeDisposable.add(it)}
                 .subscribe { city_from_text_view.text = it.name }
         presenter.getCityToObservable()
                 .doOnNext { cityTo = it }
+                .doOnSubscribe{compositeDisposable.add(it)}
                 .subscribe { city_to_text_view.text = it.name }
 
         Observable.merge(
@@ -58,13 +66,16 @@ class MainActivity : DaggerAppCompatActivity() {
                 city_to_text_view.clicks().map { NUM_CITY_TO })
                 .filter { !isCityFragmentAdded() }
                 .doOnNext { addCityFragment() }
+                .doOnSubscribe{compositeDisposable.add(it)}
                 .subscribe(presenter.getCityNumObserver())
 
         swap_button.clicks()
+                .doOnSubscribe{compositeDisposable.add(it)}
                 .map { Observable.just(cityTo, cityFrom) }
-                .subscribe(presenter.getSwapObserver())
+                .subscribe(presenter.getCitySwapObserver())
 
         find_tickets_button.clicks()
+                .doOnSubscribe{compositeDisposable.add(it)}
                 .subscribe {
                     startActivity(intentFor<WeatherActivity>(
                             "cityFrom" to cityFrom, "cityTo" to cityTo))
@@ -73,6 +84,10 @@ class MainActivity : DaggerAppCompatActivity() {
 
     //дэйтпикеры не связаны с презентером, т. к. их данные не используются
     private fun initDatePick() {
+        val calendar = Calendar.getInstance()
+        val format = SimpleDateFormat("dd MMM, E", Locale.US)
+        forward_date_view.text = format.format(calendar.time)
+
         forward_date_layout.setOnClickListener {
             val calendar = Calendar.getInstance()
             DatePickerDialog(this, { _, year, month, date ->
@@ -86,55 +101,53 @@ class MainActivity : DaggerAppCompatActivity() {
         }
     }
 
-    //счетчики билетов не связаны с презентером, т. к. их данные не используются
     private fun initTicketCounters() {
-        var adultCounter = 0
-        var childCounter = 0
-        var babyCounter = 0
-        var counter = 0
+        Observable.mergeArray(
+                adult_add.clicks().map { +1 }
+                        .map { TicketCounter(it, 0, 0) },
+                adult_remove.clicks().map { -1 }
+                        .map { TicketCounter(it, 0, 0) },
+                child_add.clicks().map { +1 }
+                        .map { TicketCounter(0, it, 0) },
+                child_remove.clicks().map { -1 }
+                        .map { TicketCounter(0, it, 0) },
+                baby_add.clicks().map { +1 }
+                        .map { TicketCounter(0, 0, it) },
+                baby_remove.clicks().map { -1 }
+                        .map { TicketCounter(0, 0, it) })
+                .scan(TicketCounter(0, 0, 0)) { accumulator, value ->
+                    value.setCounter(accumulator)
+                    //value
+                    when {
+                        value.sum() > TICKETS_MAX_NUM -> {
+                            toast("max tickets amount is 9")
+                            accumulator
+                        }
+                        value.baby > value.adult -> {
+                            toast("baby must not more adult")
+                            accumulator
+                        }
+                        value.hasNegative() -> accumulator
+                        else -> value
+                    }
+                }.cacheWithInitialCapacity(1)
+                .doOnSubscribe{compositeDisposable.add(it)}
+                .subscribe(presenter.getTicketCounterObserver())
 
-        adult_add.setOnClickListener {
-            if (counter + 1 <= TICKETS_MAX_NUM) {
-                adultCounter++
-                counter++
-                adult_counter.text = adultCounter.toString()
-            } else toast("Max tickets number is 9")
-        }
-        child_add.setOnClickListener {
-            if (counter + 1 <= TICKETS_MAX_NUM) {
-                childCounter++
-                counter++
-                child_counter.text = childCounter.toString()
-            } else toast("Max tickets number is 9")
-        }
-        baby_add.setOnClickListener {
-            if (counter + 1 <= TICKETS_MAX_NUM) {
-                babyCounter++
-                counter++
-                baby_counter.text = babyCounter.toString()
-            } else toast("Max tickets number is 9")
-        }
-        adult_remove.setOnClickListener {
-            if (adultCounter - 1 >= 0) {
-                adultCounter--
-                counter--
-                adult_counter.text = adultCounter.toString()
-            }
-        }
-        child_remove.setOnClickListener {
-            if (childCounter - 1 >= 0) {
-                childCounter--
-                counter--
-                child_counter.text = childCounter.toString()
-            }
-        }
-        baby_remove.setOnClickListener {
-            if (babyCounter - 1 >= 0) {
-                babyCounter--
-                counter--
-                baby_counter.text = babyCounter.toString()
-            }
-        }
+        presenter.getAdultTicketCounterObservable()
+                .map { it.toString() }
+                .doOnSubscribe{compositeDisposable.add(it)}
+                .subscribe { adult_counter.text = it }
+
+        presenter.getChildTicketCounterObservable()
+                .map { it.toString() }
+                .doOnSubscribe{compositeDisposable.add(it)}
+                .subscribe { child_counter.text = it }
+
+        presenter.getBabyTicketCounterObservable()
+                .map { it.toString() }
+                .doOnSubscribe{compositeDisposable.add(it)}
+                .subscribe { baby_counter.text = it }
     }
 
     private fun isCityFragmentAdded() =
@@ -161,8 +174,6 @@ class MainActivity : DaggerAppCompatActivity() {
         searchItem.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
             override fun onMenuItemActionExpand(item: MenuItem?): Boolean = true
             override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
-                if (item is SearchView)
-                    item.isIconified = false
                 removeCityFragment()
                 return true
             }
@@ -182,5 +193,10 @@ class MainActivity : DaggerAppCompatActivity() {
         //    return true
         //}
         return super.onOptionsItemSelected(item)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        compositeDisposable.clear()
     }
 }

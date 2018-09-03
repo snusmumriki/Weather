@@ -33,16 +33,13 @@ class CityRecyclerViewAdapter @Inject constructor(private val presenter: CityPre
                     .inflate(R.layout.fragment_city, parent, false))
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) =
-            Observable.just(position)
-                    .map { items[position] }
+            Observable.just(items[position])
                     .doOnNext {
                         holder.nameView.text = it.name
                         holder.countryCodeView.text = it.countryCode
-                    }
-                    .flatMap { city ->
+                    }.flatMap { city ->
                         holder.itemView.clicks().map { city }
-                    }
-                    .subscribe(presenter.getCityObserver())
+                    }.subscribe(presenter.getCityObserver())
 
     override fun getItemCount(): Int = items.size
 

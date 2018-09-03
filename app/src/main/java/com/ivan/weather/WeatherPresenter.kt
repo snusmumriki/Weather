@@ -1,7 +1,9 @@
 package com.ivan.weather
 
-import android.util.Log
-import com.ivan.weather.data.*
+import com.ivan.weather.data.City
+import com.ivan.weather.data.Forecast
+import com.ivan.weather.data.Weather
+import com.ivan.weather.data.WeatherApiService
 import io.reactivex.Observable
 import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -23,12 +25,21 @@ private fun weatherWeekDayNum(weather: Weather): Int {
 }
 
 private fun createForecast(i: Int, forecastList: List<List<Weather>>): Forecast {
-    var offset = 0
-    if (i == 0) offset += WEATHER_NUMBER - forecastList.size
     val list = forecastList[i]
+    val offset = if (i == 0) WEATHER_NUMBER - list.size else 0
     val date = Date(list[0].timeSeconds * 1000L)
-    val format = SimpleDateFormat("EEEE", Locale.US)
-    return Forecast(list, offset, format.format(date))
+    val dayOfWeek = SimpleDateFormat("EEEE", Locale.US).format(date)
+    var nextDayOfWeek = ""
+    var previousDayOfWeek = ""
+    if (i > 0) {
+        val dt = Date(forecastList[i - 1][0].timeSeconds * 1000L)
+        previousDayOfWeek = SimpleDateFormat("EEEE", Locale.US).format(dt)
+    }
+    if (i < forecastList.size - 1) {
+        val dt = Date(forecastList[i + 1][0].timeSeconds * 1000L)
+        nextDayOfWeek = SimpleDateFormat("EEEE", Locale.US).format(dt)
+    }
+    return Forecast(list, offset, dayOfWeek, nextDayOfWeek, previousDayOfWeek)
 }
 
 @Singleton
@@ -36,7 +47,7 @@ class WeatherPresenter @Inject constructor(private val apiService: WeatherApiSer
                                            private val indexSubject: BehaviorSubject<Int>) {
 
     fun getForecastObservable(city: City): Observable<Forecast> =
-            apiService.getForecast(cityWithCountryCode(city))
+            apiService.getForecast(city.lat, city.lon)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .doOnError { it.printStackTrace() }.retry()
@@ -50,11 +61,8 @@ class WeatherPresenter @Inject constructor(private val apiService: WeatherApiSer
                             sum + if ((0 <= sum + num)
                                     and (sum + num < list.size))
                                 num else 0
-                        }//.startWith(0)
-                                .doOnNext { Log.i("tag", it.toString()) }
-                                .map { createForecast(it, list) }
+                        }.map { createForecast(it, list) }
                     }
-    //.map { createForecast(1, it) }.toObservable()
 
     fun getIndexObserver(): Observer<Int> = indexSubject
 }

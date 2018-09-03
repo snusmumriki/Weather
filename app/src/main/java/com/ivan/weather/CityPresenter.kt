@@ -1,7 +1,9 @@
 package com.ivan.weather
 
+import android.util.Log
 import com.ivan.weather.data.City
 import com.ivan.weather.data.MeetupApiService
+import com.ivan.weather.data.TicketCounter
 import io.reactivex.Observable
 import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -17,19 +19,27 @@ const val NUM_CITY_TO = 1
 const val TICKETS_MAX_NUM = 9
 
 @Singleton
-class CityPresenter @Inject constructor(private val apiService: MeetupApiService,
-                                        private val numSubject: PublishSubject<Int>,
-                                        private val citySubject: PublishSubject<City>,
-                                        private val swapSubject: PublishSubject<Observable<City>>,
-                                        private val searchSubject: BehaviorSubject<CharSequence>) {
+class CityPresenter
+@Inject
+constructor(private val apiService: MeetupApiService,
+            private val numSubject: PublishSubject<Int>,
+            private val citySubject: PublishSubject<City>,
+            private val swapSubject: PublishSubject<Observable<City>>,
+            private val searchSubject: BehaviorSubject<CharSequence>,
+            private val counterSubject: PublishSubject<TicketCounter>) {
 
-    private val cityInitObservable = apiService.getCities(null)
+    init {
+        Log.i("tag", "created")
+    }
+
+    private val initCityObservable = apiService.getCities(null)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .doOnError { it.printStackTrace() }.retry()
             .map { it.cityList }
             .flatMap { it.toObservable() }
             .take(2)
+            .cacheWithInitialCapacity(1)
 
     fun getCityListObservable(): Observable<List<City>> =
             apiService.getCities(null)
@@ -43,32 +53,40 @@ class CityPresenter @Inject constructor(private val apiService: MeetupApiService
                                     .filter { it.name.contains(str, true) or str.isEmpty() }
                                     .toList().toObservable()
                         }
-                    }
+                    }.cacheWithInitialCapacity(1)
 
     fun getCityObservable(): Observable<City> = citySubject
 
     fun getCityFromObservable(): Observable<City> =
-            Observable.merge(
-                    numSubject.flatMap { num ->
-                        citySubject.filter { num == NUM_CITY_FROM }
-                                .take(1)
-                    }, swapSubject.flatMap { it.take(1) })
-                    .startWith(cityInitObservable.take(1))
+            numSubject.flatMap { num ->
+                citySubject.filter { num == NUM_CITY_FROM }
+                        .take(1)
+            }.mergeWith(swapSubject.flatMap { it.take(1) })
+                    .startWith(initCityObservable.take(1))
 
     fun getCityToObservable(): Observable<City> =
-            Observable.merge(
-                    numSubject.flatMap { num ->
-                        citySubject.filter { num == NUM_CITY_TO }
-                                .take(1)
-                    }, swapSubject.flatMap { it.takeLast(1) })
-                    .startWith(cityInitObservable.takeLast(1))
+            numSubject.flatMap { num ->
+                citySubject.filter { num == NUM_CITY_TO }
+                        .take(1)
+            }.mergeWith(swapSubject.flatMap { it.takeLast(1) })
+                    .startWith(initCityObservable.takeLast(1))
+
+    fun getAdultTicketCounterObservable(): Observable<Int> =
+            counterSubject.map { it.adult }
+
+    fun getChildTicketCounterObservable(): Observable<Int> =
+            counterSubject.map { it.child }
+
+    fun getBabyTicketCounterObservable(): Observable<Int> =
+            counterSubject.map { it.baby }
 
     fun getCityNumObserver(): Observer<Int> = numSubject
 
     fun getCityObserver(): Observer<City> = citySubject
 
-    fun getSwapObserver(): Observer<Observable<City>> = swapSubject
-
     fun getSearchObserver(): Observer<CharSequence> = searchSubject
 
+    fun getCitySwapObserver(): Observer<Observable<City>> = swapSubject
+
+    fun getTicketCounterObserver(): Observer<TicketCounter> = counterSubject
 }

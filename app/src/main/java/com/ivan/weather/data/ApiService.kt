@@ -4,7 +4,7 @@ import io.reactivex.Observable
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-const val MEETUP_BASE_URL ="http://api.meetup.com"
+const val MEETUP_BASE_URL ="https://api.meetup.com"
 
 interface MeetupApiService {
     @GET("/2/cities")
@@ -13,14 +13,13 @@ interface MeetupApiService {
                   @Query("photo-host") photoHost: String = "public"): Observable<CityListWrapper>
 }
 
-const val WEATHER_BASE_URL = "http://api.openweathermap.org"
-const val APP_ID = "86b284d3a5564b77e1ee5847d21b6a73" //api key
-fun cityWithCountryCode(city: City): String = "${city.name},${city.countryCode}"
+const val WEATHER_BASE_URL = "https://api.openweathermap.org"
+const val APP_ID = "86b284d3a5564b77e1ee5847d21b6a73"
 fun iconCodeToUrl(iconCode: String): String = "http://openweathermap.org/img/w/$iconCode.png"
 
 interface WeatherApiService {
     @GET("/data/2.5/forecast")
-    fun getForecast(@Query("q") cityWithCountryCode: String,  //в формате "{город},{страна}"
-                    @Query("units") units: String = "metric", //температура по цельсию
+    fun getForecast(@Query("lat") lat: Double, @Query("lon") lon: Double,
+                    @Query("units") units: String = "metric", //в метрических единица
                     @Query("appid") appId: String = APP_ID): Observable<ForecastListWrapper>
 }

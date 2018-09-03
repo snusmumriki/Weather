@@ -74,7 +74,7 @@ class WeatherActivity : DaggerAppCompatActivity() {
 
         override fun onFling(event1: MotionEvent, event2: MotionEvent,
                              velocityX: Float, velocityY: Float): Boolean {
-            presenter.getIndexObserver().onNext(-velocityX.sign.toInt())
+            presenter.getIndexObserver().onNext(-velocityY.sign.toInt())
             return true
         }
     }
