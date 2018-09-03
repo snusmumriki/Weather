@@ -17,7 +17,7 @@ import lecho.lib.hellocharts.model.*
 import javax.inject.Inject
 import kotlin.math.roundToInt
 
-
+//здесь отображается прогноз погоды
 class ForecastFragment : DaggerFragment() {
     @Inject
     lateinit var presenter: WeatherPresenter

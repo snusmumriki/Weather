@@ -18,6 +18,7 @@ const val NUM_CITY_FROM = 0
 const val NUM_CITY_TO = 1
 const val TICKETS_MAX_NUM = 9
 
+//общается с пользовательским интерфейсом главном экране и показывает список горов во фрагменте
 @Singleton
 class CityPresenter
 @Inject
@@ -32,6 +33,7 @@ constructor(private val apiService: MeetupApiService,
         Log.i("tag", "created")
     }
 
+    //отсюда берем города откуда и куда
     private val initCityObservable = apiService.getCities(null)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -41,6 +43,7 @@ constructor(private val apiService: MeetupApiService,
             .take(2)
             //.cacheWithInitialCapacity(1)
 
+    //для списка
     fun getCityListObservable(): Observable<List<City>> =
             apiService.getCities(null)
                     .subscribeOn(Schedulers.io())
@@ -55,15 +58,17 @@ constructor(private val apiService: MeetupApiService,
                         }
                     }//.cacheWithInitialCapacity(1)
 
+    //объект города который возвращается из фрагмента
     fun getCityObservable(): Observable<City> = citySubject
 
+    // объект города приходит в нужную вью
     fun getCityFromObservable(): Observable<City> =
             numSubject.flatMap { num ->
                 citySubject.filter { num == NUM_CITY_FROM }
                         .take(1)
             }.mergeWith(swapSubject.flatMap { it.take(1) })
                     .startWith(initCityObservable.take(1))
-
+    // объект города приходит в нужную вью
     fun getCityToObservable(): Observable<City> =
             numSubject.flatMap { num ->
                 citySubject.filter { num == NUM_CITY_TO }
@@ -71,6 +76,7 @@ constructor(private val apiService: MeetupApiService,
             }.mergeWith(swapSubject.flatMap { it.takeLast(1) })
                     .startWith(initCityObservable.takeLast(1))
 
+    //сюда подписаны счетчики
     fun getAdultTicketCounterObservable(): Observable<Int> =
             counterSubject.map { it.adult }
 
@@ -85,8 +91,8 @@ constructor(private val apiService: MeetupApiService,
     fun getCityObserver(): Observer<City> = citySubject
 
     fun getSearchObserver(): Observer<CharSequence> = searchSubject
-
+    // наблюдатель кнопки перемены городов местами
     fun getCitySwapObserver(): Observer<Observable<City>> = swapSubject
-
+    // наблюдатель изменения состояния счетчиков
     fun getTicketCounterObserver(): Observer<TicketCounter> = counterSubject
 }

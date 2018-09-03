@@ -42,6 +42,7 @@ private fun createForecast(i: Int, forecastList: List<List<Weather>>): Forecast 
     return Forecast(list, offset, dayOfWeek, nextDayOfWeek, previousDayOfWeek)
 }
 
+//загружает пргноз погоды на один день во фрагмент, реагирует на свайп или на нажатия верхней и нижней tetxtview
 @Singleton
 class WeatherPresenter @Inject constructor(private val apiService: WeatherApiService,
                                            private val indexSubject: BehaviorSubject<Int>

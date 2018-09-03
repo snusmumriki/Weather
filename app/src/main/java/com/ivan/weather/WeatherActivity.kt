@@ -15,7 +15,7 @@ import org.jetbrains.anko.intentFor
 import javax.inject.Inject
 import kotlin.math.sign
 
-
+//здесь отображется вкладки с прогнозами
 class WeatherActivity : DaggerAppCompatActivity() {
 
     @Inject

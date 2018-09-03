@@ -12,6 +12,8 @@ import kotlinx.android.synthetic.main.fragment_city.view.*
 import javax.inject.Inject
 import javax.inject.Singleton
 
+
+//выводит список городов
 @Singleton
 class CityRecyclerViewAdapter @Inject constructor(private val presenter: CityPresenter) :
         RecyclerView.Adapter<CityRecyclerViewAdapter.ViewHolder>() {
@@ -19,7 +21,6 @@ class CityRecyclerViewAdapter @Inject constructor(private val presenter: CityPre
     private var items: List<City> = emptyList()
 
     init {
-        //presenter.getCityListSingle()
         presenter.getCityListObservable()
                 .subscribe({
                     items = it
@@ -33,6 +34,7 @@ class CityRecyclerViewAdapter @Inject constructor(private val presenter: CityPre
                     .inflate(R.layout.fragment_city, parent, false))
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) =
+            // отправляем выбранный объект города в главную активность
             Observable.just(items[position])
                     .doOnNext {
                         holder.nameView.text = it.name

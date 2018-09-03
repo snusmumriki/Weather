@@ -22,9 +22,8 @@ import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
 
-
+//главный экран
 class MainActivity : DaggerAppCompatActivity() {
-
 
     @Inject
     lateinit var presenter: CityPresenter
@@ -178,6 +177,7 @@ class MainActivity : DaggerAppCompatActivity() {
             supportFragmentManager.findFragmentByTag("cityFrag") != null
 
     private fun addCityFragment() {
+        searchItem.isVisible = true
         searchItem.expandActionView()
         supportFragmentManager.beginTransaction()
                 .add(R.id.city_fragment_container, cityFragment, "cityFrag")
@@ -185,7 +185,7 @@ class MainActivity : DaggerAppCompatActivity() {
     }
 
     private fun removeCityFragment() {
-        supportActionBar?.setDisplayHomeAsUpEnabled(false)
+        searchItem.isVisible = false
         supportFragmentManager.beginTransaction()
                 .remove(cityFragment)
                 .commit()
@@ -195,6 +195,7 @@ class MainActivity : DaggerAppCompatActivity() {
         menuInflater.inflate(R.menu.menu_city, menu)
 
         searchItem = menu.findItem(R.id.city_search)
+        searchItem.isVisible = false
         searchItem.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
             override fun onMenuItemActionExpand(item: MenuItem?): Boolean = true
             override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {

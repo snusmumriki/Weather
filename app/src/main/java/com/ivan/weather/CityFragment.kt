@@ -9,6 +9,7 @@ import dagger.android.support.DaggerFragment
 import kotlinx.android.synthetic.main.fragment_city_list.*
 import javax.inject.Inject
 
+//здесь отображается список городов
 @CityScope
 class CityFragment : DaggerFragment() {
     @Inject
