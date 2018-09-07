@@ -150,7 +150,7 @@ class MainActivity : DaggerAppCompatActivity() {
                             accumulator
                         }
                         value.baby > value.adult -> {
-                            toast("baby must not more adult")
+                            toast("children's tickets should not be more than adults")
                             accumulator
                         }
                         value.hasNegative() -> accumulator
