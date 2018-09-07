@@ -49,34 +49,37 @@ class MainActivity : DaggerAppCompatActivity() {
         presenter.getCityObservable()
                 .filter { isCityFragmentAdded() }
                 .doOnNext { searchItem.collapseActionView() }
-                .doOnSubscribe{compositeDisposable.add(it)}
+                .doOnSubscribe { compositeDisposable.add(it) }
                 .subscribe { removeCityFragment() }
 
         presenter.getCityFromObservable()
                 .doOnNext { cityFrom = it }
-                .doOnSubscribe{compositeDisposable.add(it)}
+                .doOnSubscribe { compositeDisposable.add(it) }
                 .subscribe { city_from_text_view.text = it.name }
         presenter.getCityToObservable()
                 .doOnNext { cityTo = it }
-                .doOnSubscribe{compositeDisposable.add(it)}
+                .doOnSubscribe { compositeDisposable.add(it) }
                 .subscribe { city_to_text_view.text = it.name }
 
         Observable.merge(
-                city_from_text_view.clicks().map { NUM_CITY_FROM },
-                city_to_text_view.clicks().map { NUM_CITY_TO })
+                city_from_text_view.clicks().map { NUM_CITY_FROM }
+                        .doOnNext { (searchItem.actionView as SearchView).queryHint = "From" },
+                city_to_text_view.clicks().map { NUM_CITY_TO }
+                        .doOnNext { (searchItem.actionView as SearchView).queryHint = "To" })
                 .filter { !isCityFragmentAdded() }
                 .doOnNext { addCityFragment() }
-                .doOnSubscribe{compositeDisposable.add(it)}
+                .doOnSubscribe { compositeDisposable.add(it) }
                 .subscribe(presenter.getCityNumObserver())
 
         swap_button.clicks()
-                .doOnSubscribe{compositeDisposable.add(it)}
+                .filter { (cityFrom != null) or (cityTo != null) }
                 .map { Observable.just(cityTo!!, cityFrom!!) }
+                .doOnSubscribe { compositeDisposable.add(it) }
                 .subscribe(presenter.getCitySwapObserver())
 
         find_tickets_button.clicks()
-                .filter{(cityFrom != null) or (cityTo != null)}
-                .doOnSubscribe{compositeDisposable.add(it)}
+                .filter { (cityFrom != null) or (cityTo != null) }
+                .doOnSubscribe { compositeDisposable.add(it) }
                 .subscribe {
                     startActivity(intentFor<WeatherActivity>(
                             "cityFrom" to cityFrom, "cityTo" to cityTo))
@@ -153,23 +156,22 @@ class MainActivity : DaggerAppCompatActivity() {
                         value.hasNegative() -> accumulator
                         else -> value
                     }
-                }//.cacheWithInitialCapacity(1)
-                .doOnSubscribe{compositeDisposable.add(it)}
+                }.doOnSubscribe { compositeDisposable.add(it) }
                 .subscribe(presenter.getTicketCounterObserver())
 
         presenter.getAdultTicketCounterObservable()
                 .map { it.toString() }
-                .doOnSubscribe{compositeDisposable.add(it)}
+                .doOnSubscribe { compositeDisposable.add(it) }
                 .subscribe { adult_counter.text = it }
 
         presenter.getChildTicketCounterObservable()
                 .map { it.toString() }
-                .doOnSubscribe{compositeDisposable.add(it)}
+                .doOnSubscribe { compositeDisposable.add(it) }
                 .subscribe { child_counter.text = it }
 
         presenter.getBabyTicketCounterObservable()
                 .map { it.toString() }
-                .doOnSubscribe{compositeDisposable.add(it)}
+                .doOnSubscribe { compositeDisposable.add(it) }
                 .subscribe { baby_counter.text = it }
     }
 
@@ -220,8 +222,8 @@ class MainActivity : DaggerAppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    override fun onStop() {
-        super.onStop()
+    override fun onDestroy() {
+        super.onDestroy()
         compositeDisposable.clear()
     }
 }

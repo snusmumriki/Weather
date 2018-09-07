@@ -1,9 +1,11 @@
 package com.ivan.weather
 
 import com.google.gson.GsonBuilder
-import com.ivan.weather.data.City
 import com.ivan.weather.data.WeatherApiService
+import io.reactivex.Observable
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.subjects.BehaviorSubject
+import io.reactivex.subjects.PublishSubject
 import okhttp3.CacheControl
 import okhttp3.OkHttpClient
 import org.itishka.gsonflatten.FlattenTypeAdapterFactory
@@ -33,7 +35,7 @@ class ExampleUnitTest {
                 .subscribe { list -> print(list) }
     }*/
 
-    @Test
+    //@Test
     fun weatherApiTest() {
         val cityPresenter = WeatherPresenter(
                 Retrofit.Builder()
@@ -53,7 +55,24 @@ class ExampleUnitTest {
                                 }.build())
                         .build()
                         .create(WeatherApiService::class.java), BehaviorSubject.create())
-                .getForecastObservable(City("London", "uk"))
-                .subscribe (::println)
+        //.getForecastObservable(City("London", "uk"))
+        //.subscribe (::println)
+    }
+
+    @Test
+    fun rxJavaTest() {
+        val sor = Observable.just(1, 2)
+        val sub = PublishSubject.create<Int>()
+        val obs = sub.replay(1).autoConnect()
+        val cd = CompositeDisposable()
+        obs.doOnSubscribe { cd.add(it) }
+                .subscribe(::println)
+        sor.doOnSubscribe { cd.add(it) }
+                .subscribe(sub)
+        cd.clear()
+        obs.doOnSubscribe { cd.add(it) }
+                .subscribe(::println)
+        sor.doOnSubscribe { cd.add(it) }
+                .subscribe(sub)
     }
 }

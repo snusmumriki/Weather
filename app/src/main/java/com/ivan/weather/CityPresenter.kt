@@ -1,6 +1,5 @@
 package com.ivan.weather
 
-import android.util.Log
 import com.ivan.weather.data.City
 import com.ivan.weather.data.MeetupApiService
 import com.ivan.weather.data.TicketCounter
@@ -29,10 +28,6 @@ constructor(private val apiService: MeetupApiService,
             private val searchSubject: BehaviorSubject<CharSequence>,
             private val counterSubject: PublishSubject<TicketCounter>) {
 
-    init {
-        Log.i("tag", "created")
-    }
-
     //отсюда берем города откуда и куда
     private val initCityObservable = apiService.getCities(null)
             .subscribeOn(Schedulers.io())
@@ -41,7 +36,6 @@ constructor(private val apiService: MeetupApiService,
             .map { it.cityList }
             .flatMap { it.toObservable() }
             .take(2)
-            //.cacheWithInitialCapacity(1)
 
     //для списка
     fun getCityListObservable(): Observable<List<City>> =
@@ -56,19 +50,20 @@ constructor(private val apiService: MeetupApiService,
                                     .filter { it.name.contains(str, true) or str.isEmpty() }
                                     .toList().toObservable()
                         }
-                    }//.cacheWithInitialCapacity(1)
+                    }
 
     //объект города который возвращается из фрагмента
     fun getCityObservable(): Observable<City> = citySubject
 
-    // объект города приходит в нужную вью
+    // направляем объект города в свой textview
     fun getCityFromObservable(): Observable<City> =
             numSubject.flatMap { num ->
                 citySubject.filter { num == NUM_CITY_FROM }
                         .take(1)
             }.mergeWith(swapSubject.flatMap { it.take(1) })
                     .startWith(initCityObservable.take(1))
-    // объект города приходит в нужную вью
+
+    // направляем объект города в свой textview
     fun getCityToObservable(): Observable<City> =
             numSubject.flatMap { num ->
                 citySubject.filter { num == NUM_CITY_TO }
@@ -91,7 +86,7 @@ constructor(private val apiService: MeetupApiService,
     fun getCityObserver(): Observer<City> = citySubject
 
     fun getSearchObserver(): Observer<CharSequence> = searchSubject
-    // наблюдатель кнопки перемены городов местами
+    // наблюдатель кнопки которая меняет местами города
     fun getCitySwapObserver(): Observer<Observable<City>> = swapSubject
     // наблюдатель изменения состояния счетчиков
     fun getTicketCounterObserver(): Observer<TicketCounter> = counterSubject
